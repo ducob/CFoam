@@ -34,7 +34,7 @@ plotting = False
 #execfile('Sets/1st_measurement.py')
 #execfile('Sets/top_bottom_difference.py')
 #execfile('Sets/heat_leak.py')
-#execfile('Sets/flow_curve.py')
-execfile('Sets/2nd_measurement.py')
+execfile('Sets/flow_curve.py')
+#execfile('Sets/2nd_measurement.py')
 
 ##########################################################################################
