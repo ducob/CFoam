@@ -1,0 +1,239 @@
+Temporary scripts:
+
+# ##########################################################################################
+#
+# def htc_point(data):
+#     ##########################################################################################
+#
+#     temp_raw = deepcopy(data[2])
+#     temp = deepcopy(data[2])
+#
+#     # for j in range(1, 17):
+#     #     for i in range(0, len(data[2][0])):
+#     #         temp[j][i] = temp_raw[j][i] - temp_raw[13][i]
+#
+#     ##########################################################################################
+#
+#     pdTop, pdBot, pdTot = power_density(data)
+#     avgTtop, avgTbot, avgTtot = avg_temp(data)
+#     stable_point = int(17000 / step_size(data)[0])
+#     sec_a = int(15000 / step_size(data)[0])
+#     sec_b = int(17000 / step_size(data)[0])
+#
+#     ##########################################################################################
+#
+#     deltaTtopIn = []
+#     deltaTtopInout = []
+#     deltaTbotIn = []
+#     deltaTbotInout = []
+#     deltaTtotIn = []
+#     deltaTtotInout = []1
+#     for i in range(0, len(avgTtop)):
+#         deltaTtopIn.append( avgTtop[i] - temp_raw[gasIn][i] )
+#         deltaTtopInout.append( avgTtop[i] - (temp_raw[gasIn][i]+temp_raw[gasOut][i])/2 )
+#         deltaTbotIn.append( avgTbot[i] - temp_raw[gasIn][i] )
+#         deltaTbotInout.append( avgTbot[i] - (temp_raw[gasIn][i]+temp_raw[gasOut][i])/2 )
+#         deltaTtotIn.append( avgTtot[i] - temp_raw[gasIn][i] )
+#         deltaTtotInout.append( avgTtot[i] - (temp_raw[gasIn][i]+temp_raw[gasOut][i])/2 )
+#
+#     ##########################################################################################
+#
+#     htcTtopIn = []
+#     htcTtopInout = []
+#     htcTbotIn = []
+#     htcTbotInout = []
+#     htcTtotIn = []
+#     htcTtotInout = []
+#     for i in range(0, len(avgTtop)):
+#         htcTtopIn.append( pdTop[i] / deltaTtopIn[i] )
+#         htcTtopInout.append( pdTop[i] / deltaTtopInout[i] )
+#         htcTbotIn.append( pdBot[i] / deltaTbotIn[i] )
+#         htcTbotInout.append( pdBot[i] / deltaTbotInout[i] )
+#         htcTtotIn.append( pdTot[i] / deltaTtotIn[i] )
+#         htcTtotInout.append( pdTot[i] / deltaTtotInout[i] )
+#
+#     htcTtopIn = htcTtopIn[stable_point]
+#     htcTtopInout = htcTtopInout[stable_point]
+#     htcTbotIn = htcTbotIn[stable_point]
+#     htcTbotInout = htcTbotInout[stable_point]
+#     htcTtotIn = htcTtotIn[stable_point]
+#     htcTtotInout = htcTtotInout[stable_point]
+#
+#     # htcTtopIn = meanSec(htcTtopIn, sec_a, sec_b)
+#     # htcTtopInout = meanSec(htcTtopInout, sec_a, sec_b)
+#     # htcTbotIn = meanSec(htcTbotIn, sec_a, sec_b)
+#     # htcTbotInout = meanSec(htcTbotInout, sec_a, sec_b)
+#     # htcTtotIn = meanSec(htcTtotIn, sec_a, sec_b)
+#     # htcTtotInout = meanSec(htcTtotInout, sec_a, sec_b)
+#
+#     htcOut = [htcTtopIn, htcTtopInout, htcTbotIn, htcTbotInout, htcTtotIn, htcTtotInout]
+#     return htcOut
+#
+# ##########################################################################################
+#
+# data1 = import_data("16_03_2015", "_13_02_37", "_(20mbar).file")
+# data2 = import_data("16_03_2015", "_23_54_39", "_(20mbar).file")
+# data3 = import_data("17_03_2015", "_10_32_49", "_(20mbar).file")
+#
+# ##########################################################################################
+#
+# htcArray = []
+# for i in range(0,6):
+#     htcArray.append( htc_point(data1)[i] )
+# for i in range(0,6):
+#     htcArray.append( htc_point(data2)[i] )
+# for i in range(0,6):
+#     htcArray.append( htc_point(data3)[i] )
+#
+# powerArray = []
+# for i in range(0,6):
+#     powerArray.append( mean(power_density(data1)[2]) )
+# for i in range(0,6):
+#     powerArray.append( mean(power_density(data2)[2]) )
+# for i in range(0,6):
+#     powerArray.append( mean(power_density(data3)[2]) )
+#
+# names = ["Top In", "Top In Out", "Bot in", "Bot In Out", "Tot In", "Tot In Out"]
+#
+# colors = ['#37AB65', '#3DF735', '#AD6D70', '#EC2504', '#8C0B90', '#C0E4FF']
+# plt.scatter(powerArray, htcArray, c = colors, label = names)
+# plt.legend("test")
+# plt.show()
+
+
+def htc_point(data):
+    adc, ps, temp = data
+    stable_point = int(16000 / step_size(data)[0])
+
+    ##########################################################################################
+    
+    pdTop, pdBot = power_density_strip(data)
+    
+    ##########################################################################################
+    
+    i = stable_point
+    gasin = temp[13][i]
+    gasout = temp[14][i]
+    delT = gasout - gasin
+
+    
+    htcS1 = pdTop[0][i] / (temp[5][i] - (gasin+ (1./8.)*delT))
+    htcS2 = pdTop[1][i] / (temp[4][i] - (gasin+(3./8.)*delT))
+    htcS3 = pdTop[2][i] / (temp[3][i] - (gasin+(5./8.)*delT))
+    htcS4 = pdTop[3][i] / (temp[2][i] - (gasin+(7./8.)*delT))
+
+    htcS5 = pdBot[0][i] / (temp[8][i] - (gasin+(1./8.)*delT))
+    htcS6 = pdBot[1][i] / (temp[9][i] - (gasin+(3./8.)*delT))
+    htcS7 = pdBot[2][i] / (temp[10][i] - (gasin+(5./8.)*delT))
+    htcS8 = pdBot[3][i] / (temp[11][i] - (gasin+(7./8.)*delT))
+
+    ##########################################################################################
+
+    # print "TOP"
+    # print pdTop[0][i]
+    # print temp[5][i]
+    # print gasin
+    # print (1./8.*delT)
+    # print "HTC: ", htcS1
+    # print"BOT"
+    # print pdBot[0][i]
+    # print temp[8][i]
+    # print gasin
+    # print (1./8.*delT)
+    # print "HTC: ", htcS5
+
+    ##########################################################################################
+
+    return htcS1, htcS2, htcS3, htcS4, htcS5, htcS6, htcS7, htcS8
+    
+### htc_mean, returns the htc of a data set for all strips calculated by taking the average of a specified domain ###
+def htc_mean (data, timeStart, timeEnd):
+    adc, ps, temp = data
+    pdTop, pdBot = power_density_strip(data)
+    stepsize = step_size(data)[0]
+
+    pointStart = int(timeStart / stepsize)
+    pointEnd = int(timeEnd / stepsize)
+    output = "number"
+
+    ##########################################################################################
+
+    gasin = temp[13]
+    gasout = temp[14]
+    delT = [a-b for a, b in zip(gasout, gasin)]
+
+    ##########################################################################################
+
+    htcS1, htcS2, htcS3, htcS4, htcS5, htcS6, htcS7, htcS8 = ([] for i in range(8))
+
+    for i in range(pointStart, pointEnd):
+        htcS1.append( pdTop[0][i] / (temp[5][i] - (gasin[i] + (1./8.)*delT[i])) )
+        htcS2.append( pdTop[1][i] / (temp[4][i] - (gasin[i] + (3./8.)*delT[i])) )
+        htcS3.append( pdTop[2][i] / (temp[3][i] - (gasin[i] + (5./8.)*delT[i])) )
+        htcS4.append( pdTop[3][i] / (temp[2][i] - (gasin[i] + (7./8.)*delT[i])) )
+
+        htcS5.append( pdBot[0][i] / (temp[8][i] - (gasin[i] + (1./8.)*delT[i])) )
+        htcS6.append( pdBot[1][i] / (temp[9][i] - (gasin[i] + (3./8.)*delT[i])) )
+        htcS7.append( pdBot[2][i] / (temp[10][i] - (gasin[i] + (5./8.)*delT[i])) )
+        htcS8.append( pdBot[3][i] / (temp[11][i] - (gasin[i] + (7./8.)*delT[i])) )
+
+    ##########################################################################################
+    
+    if(output == "array"):
+        return htcS1, htcS2, htcS3, htcS4, htcS5, htcS6, htcS7, htcS8
+   
+    if(output == "number"):
+        htcS1 = mean(htcS1)
+        htcS2 = mean(htcS2)
+        htcS3 = mean(htcS3)
+        htcS4 = mean(htcS4)
+        
+        htcS5 = mean(htcS5)
+        htcS6 = mean(htcS6)
+        htcS7 = mean(htcS7)
+        htcS8 = mean(htcS8)
+        
+        return htcS1, htcS2, htcS3, htcS4, htcS5, htcS6, htcS7, htcS8 
+
+        def htc_plot_mean ( data1, data2, data3, timeStart, timeEnd):
+    powerArray = []
+    for i in range(0,8):
+        powerArray.append( mean(power_density(data1)[2]) )
+    for i in range(0,8):
+        powerArray.append( mean(power_density(data2)[2]) )
+    for i in range(0,8):
+        powerArray.append( mean(power_density(data3)[2]) )
+
+    htcArray = []
+    first = htc_mean(data1, timeStart, timeEnd)
+    print first
+    for i in range(0,8):
+        htcArray.append( first[i] )
+    print "Part 1: Done"
+    print " "
+
+    second = htc_mean(data2, timeStart, timeEnd)
+    print second
+    for i in range(0,8):
+        htcArray.append( second[i] )
+    print "Part 2: Done"
+    print " "
+
+    third = htc_mean(data3, timeStart, timeEnd)
+    print third
+    for i in range(0,8):
+        htcArray.append( third[i] )
+    print "Part 3: Done"
+    print " "
+    
+    colors = ["#0000FF", "#33CC33", "#FF9933", "#FF0000"]
+    for j in range(0, 3):
+        for i in range(0, 4):
+            plt.scatter(powerArray[(8*j)+i], htcArray[(8*j)+i], marker="^", c = colors[i], s=50)
+        for i in range(4, 8):
+            plt.scatter(powerArray[(8*j)+i], htcArray[(8*j)+i], marker="s", c = colors[i-4], s=50)
+
+    plt.grid()
+    plt.xlabel("Power Density ( W/cm2 )", fontsize = 16)
+    plt.ylabel("HTC ( W/(m"u'\u00B2'"K) )", fontsize = 16)
+    plt.show()
